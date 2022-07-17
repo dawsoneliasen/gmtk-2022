@@ -5,6 +5,10 @@ using UnityEngine.Tilemaps;
 
 public class LevelGeneration : MonoBehaviour {
     
+    public GameObject player;
+    public GameObject die;
+    public GameObject walkingEnemy;
+    public GameObject flyingEnemy;
     public int levelWidth;
     public int levelHeight;
     public float smoothness;
@@ -15,20 +19,65 @@ public class LevelGeneration : MonoBehaviour {
     public RuleTile dirt;
     public RuleTile stone;
     public Tilemap tilemap;
+    public RuleTile chain;
     private float seed;
     private float stoneBoundarySeed;
     private float abyssSeed;
+    private float timeSinceSpawn;
 
     void Start() {
         seed = Random.Range(-9999999, 9999999);
         stoneBoundarySeed = Random.Range(-9999999, 9999999);
         abyssSeed = Random.Range(-9999999, 9999999);
         GenerateChaosLevel();
-        GenerateFloatingStructures(2, levelWidth / 2, 50, 100); 
-        GenerateFloatingStructures(5, levelWidth / 10, 20, 100);
-        GenerateFloatingStructures(50, levelWidth / 50, 5, 50);
+        // GenerateFloatingStructures(2, levelWidth / 2, 50, 100, true); 
+        // GenerateFloatingStructures(5, levelWidth / 10, 5, 10, false);
+        // GenerateFloatingStructures(50, levelWidth / 50, 5, 10, false);
+        GeneratePlayerSpawn();
+        GenerateDice();
         // GenerateFractures();
         // GenerateTunnels();
+    }
+
+    void Update() {
+        int numEnemies = GameObject.FindGameObjectsWithTag("Enemy").Length;
+        timeSinceSpawn += Time.deltaTime;
+        if (numEnemies < 50) {
+            if (timeSinceSpawn > 5) {
+                GameObject enemy;
+                if (Random.Range(0.0f, 1.0f) > 0.5f) {
+                    enemy = walkingEnemy;
+                } else {
+                    enemy = flyingEnemy;
+                }
+                SpawnEnemy(enemy);
+                timeSinceSpawn = 0;
+                numEnemies++;
+            }
+        }
+    }
+
+    void SpawnEnemy(GameObject enemy) {
+        int x = Random.Range(0, levelWidth);
+        int y;
+        for (y = levelHeight; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--);
+        GameObject enemyInstance = GameObject.Instantiate(enemy);
+        enemyInstance.transform.position = new Vector3(x, y + 6, 0);
+    }
+
+    void GenerateDice() {
+        int numDice = Random.Range(2, 5);
+        for (int i = 0; i < numDice; i++) {
+            int dieLevel = Random.Range(1, 11);
+            int dieElementIndex = Random.Range(-1, 5);
+            Spell spell = SpellMaker.MakeSpellLevel(dieLevel, dieElementIndex);
+            int x = Random.Range(0, levelWidth);
+            int y;
+            for (y = levelHeight; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--);
+            GameObject dieInstance = GameObject.Instantiate(die);
+            dieInstance.transform.position = new Vector3(x, y + 12, 0);
+            dieInstance.GetComponent<Die>().spell = spell;
+        }
     }
 
     int PerlinStep(int x, float smoothness, float seed, bool untrend = true) {
@@ -88,6 +137,16 @@ public class LevelGeneration : MonoBehaviour {
         }
     }
 
+    void GeneratePlayerSpawn() {
+        int playerSpawnX = levelWidth / 2;
+        int y;
+        for (y = levelHeight; !tilemap.HasTile(new Vector3Int(playerSpawnX, y, 0)); y--);
+        GameObject playerInstance = GameObject.Instantiate(player);
+        playerInstance.transform.position = new Vector3(playerSpawnX, y + 6, 0);
+        Camera.main.transform.position = playerInstance.transform.position;
+        Camera.main.transform.GetComponent<CameraController>().follow = playerInstance;
+    }
+
     void GenerateFractures() {
         int numFractures = 8;
         for (int i = 0; i <= numFractures; i++) {
@@ -129,27 +188,21 @@ public class LevelGeneration : MonoBehaviour {
         }
     }
 
-    void GenerateFloatingStructures(int numFloatingStructures, int structureRadius, int structureLiftAmountMin, int structureLiftAmountMax) {
-        // int numFloatingStructures = Random.Range(0, 3);
+    void GenerateFloatingStructures(int numFloatingStructures, int structureRadius, int structureLiftAmountMin, int structureLiftAmountMax, bool generateChain) {
         for (int i = 0; i < numFloatingStructures; i++) {
             float structureSeed = Random.Range(-9999999, 9999999);
-            int structureStartX = Random.Range(0, levelWidth - structureRadius);
+            int structureStartX = Random.Range(0, levelWidth - (structureRadius * 2));
             int structureEndX = structureStartX + (structureRadius * 2);
-            int currentStructureFractureY = levelHeight;
             int structureLiftAmount = Random.Range(structureLiftAmountMin, structureLiftAmountMax);
+            int initialStructureFractureY = levelHeight;
             for (int y = levelHeight; y >= 0; y--) {
                 if (tilemap.HasTile(new Vector3Int(structureStartX, y, 0))) {
-                    currentStructureFractureY = y;
+                    initialStructureFractureY = y;
                     break;
                 }
             }
+            int currentStructureFractureY = initialStructureFractureY;
             for (int x = structureStartX; x <= structureEndX; x++) {
-                // int distanceToStructureCenter = Mathf.Abs(x - (structureStartX + structureRadius));
-                // int distanceOverRadius = distanceToStructureCenter / structureRadius;
-                // if (distanceOverRadius == 0) {
-                //     distanceOverRadius = 1;
-                // }
-                // for (int y = levelHeight; y >= currentStructureFractureY / distanceOverRadius; y--) {
                 for (int y = levelHeight; y >= currentStructureFractureY; y--) {
                     // TODO: fragments suspened in fracture
                     if (tilemap.HasTile(new Vector3Int(x, y, 0))) {
@@ -165,6 +218,27 @@ public class LevelGeneration : MonoBehaviour {
                 // yStep *= structureFractureSharpness;
                 currentStructureFractureY += yStep;
             }
+            if (generateChain) {
+                int chainX = structureStartX;
+                int chainY = initialStructureFractureY + structureLiftAmount;
+                GenerateChain(chainX, chainY);
+                chainX = structureEndX;
+                chainY = currentStructureFractureY + structureLiftAmount;
+                GenerateChain(chainX, chainY);
+            }
+        }
+    }
+
+    void GenerateChain(int x, int chainStartY) {
+        int y;
+        for (y = chainStartY; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--) {
+            if (y <= 0) {
+                break;
+            }
+        }
+        int chainEndY = y + 4;
+        for (y = chainStartY; y >= chainEndY; y--) {
+            tilemap.SetTile(new Vector3Int(x, y, 0), chain);
         }
     }
 

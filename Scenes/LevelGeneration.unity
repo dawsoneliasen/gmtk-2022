@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -176,7 +177,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 25
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -207,6 +208,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c003dce0a352dcc499dfcb68dd2a00bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  follow: {fileID: 0}
+  speed: 5
 --- !u!1 &746151180
 GameObject:
   m_ObjectHideFlags: 0
@@ -401,7 +416,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30cf134be03141979847711632a6544, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelWidth: 1000
+  player: {fileID: 5088180678587844073, guid: 6c12881c6fd6d44ed9baf250ad424c69, type: 3}
+  die: {fileID: 5704489298807776201, guid: ecbcb7d5df9752f4083441051e463f8f, type: 3}
+  walkingEnemy: {fileID: 2582050705361919887, guid: afb6979f5b5994ac284606a2e6c042de, type: 3}
+  flyingEnemy: {fileID: 1122527530911121587, guid: 2dae36f1cbbf34e1aa6bb7020b3df76d, type: 3}
+  levelWidth: 200
   levelHeight: 1000
   smoothness: 30
   abyssSmoothness: 5
@@ -411,6 +430,7 @@ MonoBehaviour:
   dirt: {fileID: 11400000, guid: 775393d3ad2384300a86b12017435938, type: 2}
   stone: {fileID: 11400000, guid: 91036c897d745488aa72a90b908e211c, type: 2}
   tilemap: {fileID: 746151183}
+  chain: {fileID: 11400000, guid: 288f2e9b1ec114fe9b054c2ddb1d1ec6, type: 2}
 --- !u!4 &2040887705
 Transform:
   m_ObjectHideFlags: 0

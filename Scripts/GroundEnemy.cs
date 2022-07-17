@@ -49,7 +49,7 @@ public class GroundEnemy : MonoBehaviour
     }
     
     void OnCollisionEnter2D(Collision2D col){
-        if(col.collider.gameObject.name == "Player"){
+        if(col.collider.gameObject.name == "Player(Clone)"){
             col.collider.gameObject.GetComponent<Lifeforce>().Damage(damage);
         }
     }

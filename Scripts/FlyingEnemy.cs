@@ -67,7 +67,7 @@ public class FlyingEnemy : MonoBehaviour
             velOffset.y = -velOffset.y;
         }
 
-        if(col.collider.gameObject.name == "Player"){
+        if(col.collider.gameObject.name == "Player(Clone)"){
             col.collider.gameObject.GetComponent<Lifeforce>().Damage(damage);
         }
     }

@@ -47,8 +47,9 @@ public class PlayerController : MonoBehaviour
     void Jump(){
         if(Input.GetKeyDown("space") && !onRope){
             Debug.DrawLine(transform.position, transform.position + new Vector3(0, -1.5f, 0), new Color(1, 0, 0, 1), 1f);
-            if(Physics2D.RaycastAll(transform.position, new Vector3(0, -1f, 0), 1.5f).Length > 1){
-                transform.GetComponent<Rigidbody2D>().AddForce(new Vector3(0, 12), ForceMode2D.Impulse);
+            if (Physics2D.OverlapCircleAll(transform.position + new Vector3(0, -2.0f, 0), 2.0f).Length > 1) {
+            // if (Mathf.Abs(transform.GetComponent<Rigidbody2D>().velocity.y) < 0.01f) {
+                transform.GetComponent<Rigidbody2D>().AddForce(new Vector3(0, 20), ForceMode2D.Impulse);
             }
         }
     }
@@ -93,7 +94,7 @@ public class PlayerController : MonoBehaviour
             availableDice.RemoveAt(index);
             nextDice = Random.Range(0, availableDice.Count);
             Vector3 mousePos = Input.mousePosition - new Vector3(Screen.width/2, Screen.height/2, 0);
-            d.transform.position = transform.position + new Vector3(.75f, 0, 0) * Mathf.Sign(mousePos.x);
+            d.transform.position = transform.position + new Vector3(1.5f, 0, 0) * Mathf.Sign(mousePos.x);
             float forceX = Random.Range(40, 50) * mousePos.x/Screen.width * 3;
             float forceY = Random.Range(40, 50) * mousePos.y/Screen.height * 3;
             d.GetComponent<Rigidbody2D>().AddForce(new Vector2(forceX, forceY), ForceMode2D.Impulse);
