@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: ChainTile
   m_EditorClassIdentifier: 
-  m_DefaultSprite: {fileID: 7482667652216324306, guid: 7f855e554d62642a7af6ade49ae75446, type: 3}
-  m_DefaultGameObject: {fileID: 0}
+  m_DefaultSprite: {fileID: 0}
+  m_DefaultGameObject: {fileID: 5733530264206967129, guid: 5b866072e7de5443ab4e00d91050256e, type: 3}
   m_DefaultColliderType: 1
   m_TilingRules: []

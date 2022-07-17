@@ -85,7 +85,7 @@ public class PlayerController : MonoBehaviour
             d.GetComponent<Die>().castable = true;
             availableDice.RemoveAt(index);
             Vector3 mousePos = Input.mousePosition - new Vector3(Screen.width/2, Screen.height/2, 0);
-            d.transform.position = transform.position + new Vector3(.75f, 0, 0) * Mathf.Sign(mousePos.x);
+            d.transform.position = transform.position + new Vector3(1.5f, 0, 0) * Mathf.Sign(mousePos.x);
             float forceX = Random.Range(40, 50) * mousePos.x/Screen.width * 3;
             float forceY = Random.Range(40, 50) * mousePos.y/Screen.height * 3;
             d.GetComponent<Rigidbody2D>().AddForce(new Vector2(forceX, forceY), ForceMode2D.Impulse);

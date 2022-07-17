@@ -6,6 +6,7 @@ using UnityEngine.Tilemaps;
 public class LevelGeneration : MonoBehaviour {
     
     public GameObject player;
+    public GameObject die;
     public GameObject walkingEnemy;
     public GameObject flyingEnemy;
     public int levelWidth;
@@ -22,8 +23,6 @@ public class LevelGeneration : MonoBehaviour {
     private float seed;
     private float stoneBoundarySeed;
     private float abyssSeed;
-    private int numWalkingEnemies;
-    private int numFlyingEnemies;
     private float timeSinceSpawn;
 
     void Start() {
@@ -35,26 +34,25 @@ public class LevelGeneration : MonoBehaviour {
         // GenerateFloatingStructures(5, levelWidth / 10, 5, 10, false);
         // GenerateFloatingStructures(50, levelWidth / 50, 5, 10, false);
         GeneratePlayerSpawn();
+        GenerateDice();
         // GenerateFractures();
         // GenerateTunnels();
-        numWalkingEnemies = 0;
-        numFlyingEnemies = 0;
     }
 
     void Update() {
+        int numEnemies = GameObject.FindGameObjectsWithTag("Enemy").Length;
         timeSinceSpawn += Time.deltaTime;
-        if (numWalkingEnemies < 50) {
+        if (numEnemies < 50) {
             if (timeSinceSpawn > 5) {
-                SpawnEnemy(walkingEnemy);
+                GameObject enemy;
+                if (Random.Range(0.0f, 1.0f) > 0.5f) {
+                    enemy = walkingEnemy;
+                } else {
+                    enemy = flyingEnemy;
+                }
+                SpawnEnemy(enemy);
                 timeSinceSpawn = 0;
-                numWalkingEnemies++;
-            }
-        }
-        if (numFlyingEnemies < 50) {
-            if (timeSinceSpawn > 5) {
-                SpawnEnemy(flyingEnemy);
-                timeSinceSpawn = 0;
-                numFlyingEnemies++;
+                numEnemies++;
             }
         }
     }
@@ -65,6 +63,21 @@ public class LevelGeneration : MonoBehaviour {
         for (y = levelHeight; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--);
         GameObject enemyInstance = GameObject.Instantiate(enemy);
         enemyInstance.transform.position = new Vector3(x, y + 6, 0);
+    }
+
+    void GenerateDice() {
+        int numDice = Random.Range(2, 5);
+        for (int i = 0; i < numDice; i++) {
+            int dieLevel = Random.Range(1, 11);
+            int dieElementIndex = Random.Range(-1, 5);
+            Spell spell = SpellMaker.MakeSpellLevel(dieLevel, dieElementIndex);
+            int x = Random.Range(0, levelWidth);
+            int y;
+            for (y = levelHeight; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--);
+            GameObject dieInstance = GameObject.Instantiate(die);
+            dieInstance.transform.position = new Vector3(x, y + 12, 0);
+            dieInstance.GetComponent<Die>().spell = spell;
+        }
     }
 
     int PerlinStep(int x, float smoothness, float seed, bool untrend = true) {
