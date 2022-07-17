@@ -13,10 +13,12 @@ public class Die : MonoBehaviour
     [SerializeField][Range(-1,4)] int iElement = -1;
 
     public bool castable = false;
-    bool spellActive = false;
+    public bool spellActive = false;
 
     public Spell spell;
     GameObject area;
+
+    public GameObject owner;
 
     void Start(){
         //spell = SpellMaker.MakeSpellRandom();
@@ -31,6 +33,9 @@ public class Die : MonoBehaviour
         if(castable){
             timeAlive += Time.deltaTime;
             CheckRotation();
+            if(spellActive){
+                Magnitize();
+            }
         }
     }
 
@@ -64,6 +69,16 @@ public class Die : MonoBehaviour
         spell.currSide = roll;
         area.transform.localScale *= spell.radius * Mathf.Lerp(1f, 2f, roll/20f);
         StartCoroutine(WaitDuration());
+    }
+
+    public void Magnitize(){
+        if(owner == null){
+            return;
+        }
+        float distance = Vector3.Distance(transform.position, owner.transform.position);
+        if(distance < 2.5){
+            transform.position += (owner.transform.position + new Vector3(0, 3, 0) - transform.position)/50;
+        }
     }
 
     IEnumerator WaitDuration(){

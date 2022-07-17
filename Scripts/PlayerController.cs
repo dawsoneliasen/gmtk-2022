@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,11 +10,14 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] GameObject die;
     List<Spell> availableDice;
+    int nextDice;
+    Die lastThrown;
 
     public bool onRope = false;
 
     void Start(){
         InitDiceList();
+        nextDice = Random.Range(0, availableDice.Count);
     }
 
     // Update is called once per frame
@@ -21,6 +26,7 @@ public class PlayerController : MonoBehaviour
         Jump();
         ClimbRope();
         ThrowDice();
+        UpdateUI();
     }
 
     void Move(){
@@ -77,12 +83,15 @@ public class PlayerController : MonoBehaviour
 
     void ThrowDice(){
         if(Input.GetMouseButtonDown(0) && availableDice.Count > 0){
-            int index = Random.Range(0, availableDice.Count);
+            int index = nextDice;
             GameObject d = GameObject.Instantiate(die);
             d.GetComponent<Die>().spell = availableDice[index];
             //d.GetComponent<Die>().index = availableDice[index];
             d.GetComponent<Die>().castable = true;
+            d.GetComponent<Die>().owner = gameObject;
+            lastThrown = d.GetComponent<Die>();
             availableDice.RemoveAt(index);
+            nextDice = Random.Range(0, availableDice.Count);
             Vector3 mousePos = Input.mousePosition - new Vector3(Screen.width/2, Screen.height/2, 0);
             d.transform.position = transform.position + new Vector3(.75f, 0, 0) * Mathf.Sign(mousePos.x);
             float forceX = Random.Range(40, 50) * mousePos.x/Screen.width * 3;
@@ -97,6 +106,7 @@ public class PlayerController : MonoBehaviour
         if(Physics2D.IsTouching(transform.GetComponent<Collider2D>(), d.GetComponent<Collider2D>())){
             if(availableDice.Count < 5){
                 availableDice.Add(d.GetComponent<Die>().spell);
+                nextDice = Random.Range(0, availableDice.Count);
                 GameObject.Destroy(d);
             }
         }
@@ -112,6 +122,34 @@ public class PlayerController : MonoBehaviour
     void OnCollisionEnter2D(Collision2D col){
         if(col.collider.GetComponent<Die>() != null){
             CollectDice(col.collider.gameObject);
+        }
+    }
+
+    void UpdateUI(){
+        Transform UI = GameObject.Find("UI").transform;
+        if(UI == null){
+            return;
+        }
+        //UI.Find("Healthbar/Bar").GetComponent<Image>().fillAmount = transform.GetComponent<Lifeforce>().health/transform.GetComponent<Lifeforce>().maxHealth;
+        UI.Find("Healthbar/Bar").GetComponent<RectTransform>().offsetMax = new Vector2((1-transform.GetComponent<Lifeforce>().health/transform.GetComponent<Lifeforce>().maxHealth) * -150, 10);
+        if(availableDice.Count > 0){
+            UI.Find("NextDiceInfo/Element").GetComponent<TextMeshProUGUI>().text = "Element: " + availableDice[nextDice].element.ToString();
+            UI.Find("NextDiceInfo/Sides").GetComponent<TextMeshProUGUI>().text = "Sides: " + availableDice[nextDice].sides.ToString();
+            UI.Find("NextDiceInfo/Shape").GetComponent<TextMeshProUGUI>().text = "Shape: " + availableDice[nextDice].shape.ToString();
+        } else{
+            UI.Find("NextDiceInfo/Element").GetComponent<TextMeshProUGUI>().text = "Element: X";
+            UI.Find("NextDiceInfo/Sides").GetComponent<TextMeshProUGUI>().text = "Sides: X";
+            UI.Find("NextDiceInfo/Shape").GetComponent<TextMeshProUGUI>().text = "Shape: X";
+        }
+
+        if(lastThrown != null){
+            if(lastThrown.spellActive){
+                UI.Find("LastRoll/Number").GetComponent<TextMeshProUGUI>().text = lastThrown.spell.currSide.ToString();
+            } else{
+                UI.Find("LastRoll/Number").GetComponent<TextMeshProUGUI>().text = Mathf.RoundToInt(Mathf.Lerp(1, lastThrown.spell.sides, lastThrown.transform.rotation.eulerAngles.z / 360f)).ToString();
+            }
+        } else{
+            UI.Find("LastRoll/Number").GetComponent<TextMeshProUGUI>().text = "X";
         }
     }
 
