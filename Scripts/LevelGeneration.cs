@@ -5,8 +5,10 @@ using UnityEngine.Tilemaps;
 
 public class LevelGeneration : MonoBehaviour {
     
+    public bool generateFlag;
     public GameObject player;
     public GameObject die;
+    public GameObject exit;
     public GameObject walkingEnemy;
     public GameObject flyingEnemy;
     public int levelWidth;
@@ -24,22 +26,22 @@ public class LevelGeneration : MonoBehaviour {
     private float stoneBoundarySeed;
     private float abyssSeed;
     private float timeSinceSpawn;
+    private GameObject playerInstance;
+    private GameObject exitInstance;
+    private int currentLevel;
 
     void Start() {
-        seed = Random.Range(-9999999, 9999999);
-        stoneBoundarySeed = Random.Range(-9999999, 9999999);
-        abyssSeed = Random.Range(-9999999, 9999999);
-        GenerateChaosLevel();
-        // GenerateFloatingStructures(2, levelWidth / 2, 50, 100, true); 
-        // GenerateFloatingStructures(5, levelWidth / 10, 5, 10, false);
-        // GenerateFloatingStructures(50, levelWidth / 50, 5, 10, false);
-        GeneratePlayerSpawn();
-        GenerateDice();
-        // GenerateFractures();
-        // GenerateTunnels();
+        playerInstance = GameObject.Instantiate(player);
+        exitInstance = GameObject.Instantiate(exit);
+        generateFlag = true;
+        currentLevel = 0;
     }
 
     void Update() {
+        if (generateFlag) {
+            GenerateLevel();
+            generateFlag = false;
+        }
         int numEnemies = GameObject.FindGameObjectsWithTag("Enemy").Length;
         timeSinceSpawn += Time.deltaTime;
         if (numEnemies < 50) {
@@ -58,11 +60,9 @@ public class LevelGeneration : MonoBehaviour {
     }
 
     void SpawnEnemy(GameObject enemy) {
-        int x = Random.Range(0, levelWidth);
-        int y;
-        for (y = levelHeight; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--);
+        Vector3 enemyPos = LevelGenerationHelper.RandomSafePosition(levelWidth, levelHeight, tilemap);
         GameObject enemyInstance = GameObject.Instantiate(enemy);
-        enemyInstance.transform.position = new Vector3(x, y + 6, 0);
+        enemyInstance.transform.position = enemyPos;
     }
 
     void GenerateDice() {
@@ -71,57 +71,33 @@ public class LevelGeneration : MonoBehaviour {
             int dieLevel = Random.Range(1, 11);
             int dieElementIndex = Random.Range(-1, 5);
             Spell spell = SpellMaker.MakeSpellLevel(dieLevel, dieElementIndex);
-            int x = Random.Range(0, levelWidth);
-            int y;
-            for (y = levelHeight; !tilemap.HasTile(new Vector3Int(x, y, 0)); y--);
             GameObject dieInstance = GameObject.Instantiate(die);
-            dieInstance.transform.position = new Vector3(x, y + 12, 0);
+            Vector3 diePos = LevelGenerationHelper.RandomSafePosition(levelWidth, levelHeight, tilemap);
+            dieInstance.transform.position = diePos;
             dieInstance.GetComponent<Die>().spell = spell;
         }
     }
 
-    int PerlinStep(int x, float smoothness, float seed, bool untrend = true) {
-        float noiseScale = 10.01f;
-        float noise = Mathf.PerlinNoise(x * noiseScale, seed);
-        float normalizedNoise = (noise - 0.5f) * 100;
-        int elevationChange = Mathf.RoundToInt(normalizedNoise / smoothness);
-        if (untrend) {
-            if (Random.Range(0.0f, 1.0f) < 0.5) {
-                elevationChange *= -1;
-            }
+    public void GenerateLevel() {
+        currentLevel++;
+        Camera.main.transform.position = new Vector3(levelWidth / 2, levelHeight / 2, 0);
+        tilemap.ClearAllTiles();
+        foreach (GameObject block in GameObject.FindGameObjectsWithTag("Block")) {
+            Destroy(block);
         }
-        return elevationChange;
-    }
-
-    // void GenerateLevel() {
-    //     // TODO: start elevation at random y close to levelHeight / 2
-    //     int currentElevation = levelHeight / 2;
-    //     for (int x = 0; x <= levelWidth; x++) {
-    //         currentElevation += PerlinStep(x, smoothness, seed);
-    //         for (int y = 0; y <= currentElevation; y++) {
-    //             tilemap.SetTile(new Vector3Int(x, y, 0), ground);
-    //         }
-    //     }
-    // }
-
-    void GenerateChaosLevel() {
-
-        // int numLargeFloatingScructures = Random.Range(0, 4);
-        // int numSmallFloatingStructures = Random.Range(2, 13);  // also have lots of tiny floating structures
-        // int numChasms = Random.Range(1, 5);
-        // int numTunnels = Random.Range(2, 7);
-        // int numPits = Random.Range(1, 4);
-        // int numWatchtowers = Random.Range(0, 4);
-
-        // int currentElevation = (int) ((float) levelHeight / 1.5f);  // TODO: add noise to this starting point
-        // int currentAbyssCeiling = levelHeight / 5;
+        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
+            Destroy(enemy);
+        }
+        foreach (GameObject dieOnGround in GameObject.FindGameObjectsWithTag("Die")) {
+            Destroy(dieOnGround);
+        }
         int currentElevation = 333;
         int currentAbyssCeiling = 100;
         int currentStoneBoundary = 275;
         for (int x = 0; x <= levelWidth; x++) {
-            currentElevation += PerlinStep(x, smoothness, seed);
-            currentAbyssCeiling += PerlinStep(x, abyssSmoothness, abyssSeed);
-            currentStoneBoundary += PerlinStep(x, smoothness / 5, stoneBoundarySeed);
+            currentElevation += LevelGenerationHelper.PerlinStep(x, smoothness, seed);
+            currentAbyssCeiling += LevelGenerationHelper.PerlinStep(x, abyssSmoothness, abyssSeed);
+            currentStoneBoundary += LevelGenerationHelper.PerlinStep(x, smoothness / 5, stoneBoundarySeed);
             int yFloor = Mathf.Max(currentAbyssCeiling, 0);
             for (int y = yFloor; y <= currentElevation; y++) {
                 RuleTile useTile;
@@ -135,15 +111,26 @@ public class LevelGeneration : MonoBehaviour {
                 tilemap.SetTile(new Vector3Int(x, y, 0), useTile);
             }
         }
+        seed = Random.Range(-9999999, 9999999);
+        stoneBoundarySeed = Random.Range(-9999999, 9999999);
+        abyssSeed = Random.Range(-9999999, 9999999);
+        // GenerateFloatingStructures(2, levelWidth / 2, 50, 100, true); 
+        GenerateFloatingStructures(2 * (currentLevel - 1), levelWidth / 10, 5, 10, false);
+        // GenerateFloatingStructures(50, levelWidth / 50, 5, 10, false);
+        GenerateDice();
+        // GenerateFractures();
+        // GenerateTunnels();
+        GenerateExit();
+        PlacePlayerInstance();
     }
 
-    void GeneratePlayerSpawn() {
+    void PlacePlayerInstance() {
         int playerSpawnX = levelWidth / 2;
         int y;
         for (y = levelHeight; !tilemap.HasTile(new Vector3Int(playerSpawnX, y, 0)); y--);
-        GameObject playerInstance = GameObject.Instantiate(player);
+        Debug.Log(playerSpawnX);
+        Debug.Log(y);
         playerInstance.transform.position = new Vector3(playerSpawnX, y + 6, 0);
-        Camera.main.transform.position = playerInstance.transform.position;
         Camera.main.transform.GetComponent<CameraController>().follow = playerInstance;
     }
 
@@ -168,7 +155,7 @@ public class LevelGeneration : MonoBehaviour {
                     continue;
                 }
             }
-            int xStep = PerlinStep(y, 5, fractureBranchSeed, trend == 0);
+            int xStep = LevelGenerationHelper.PerlinStep(y, 5, fractureBranchSeed, trend == 0);
             if (trend != 0) {
                 xStep *= trend;
             }
@@ -211,7 +198,7 @@ public class LevelGeneration : MonoBehaviour {
                         tilemap.SetTile(new Vector3Int(x, y + structureLiftAmount, 0), useTile);
                     }
                 }
-                int yStep = PerlinStep(x, fractureSmoothness, structureSeed, false);
+                int yStep = LevelGenerationHelper.PerlinStep(x, fractureSmoothness, structureSeed, false);
                 if ((x - structureStartX) >= structureRadius) {
                     yStep *= -1;
                 }
@@ -248,13 +235,19 @@ public class LevelGeneration : MonoBehaviour {
             float tunnelSeed = Random.Range(-9999999, 9999999);
             int currentTunnelX = Random.Range(0, levelWidth);
             for (int y = 0; y <= levelHeight; y++) {
-                currentTunnelX += PerlinStep(y, tunnelSmoothness, tunnelSeed);
+                currentTunnelX += LevelGenerationHelper.PerlinStep(y, tunnelSmoothness, tunnelSeed);
                 int currentTunnelRadius = Random.Range(10, 14);
                 for(int x = currentTunnelX - currentTunnelRadius; x <= currentTunnelX + currentTunnelRadius; x++) {
                     tilemap.SetTile(new Vector3Int(x, y, 0), null);
                 }
             }
         }
+    }
+
+    void GenerateExit() {
+        Vector3 exitPos = LevelGenerationHelper.RandomSafePosition(levelWidth, levelHeight, tilemap);
+        exitPos.y -= 6;
+        exitInstance.transform.position = exitPos;
     }
 
 }
