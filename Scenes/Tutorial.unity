@@ -1931,7 +1931,7 @@ GameObject:
   - component: {fileID: 822112202}
   - component: {fileID: 822112201}
   m_Layer: 5
-  m_Name: UI
+  m_Name: ToolTips
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

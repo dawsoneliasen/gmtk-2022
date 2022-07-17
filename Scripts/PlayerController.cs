@@ -127,10 +127,11 @@ public class PlayerController : MonoBehaviour
     }
 
     void UpdateUI(){
-        Transform UI = GameObject.Find("UI").transform;
-        if(UI == null){
+        GameObject ui = GameObject.Find("UI");
+        if(ui == null){
             return;
         }
+        Transform UI = ui.transform;
         //UI.Find("Healthbar/Bar").GetComponent<Image>().fillAmount = transform.GetComponent<Lifeforce>().health/transform.GetComponent<Lifeforce>().maxHealth;
         UI.Find("Healthbar/Bar").GetComponent<RectTransform>().offsetMax = new Vector2((1-transform.GetComponent<Lifeforce>().health/transform.GetComponent<Lifeforce>().maxHealth) * -150, 10);
         if(availableDice.Count > 0){
