@@ -5,7 +5,7 @@ using spellbin;
 
 public class Spell
 {
-    SpellShape shape;
+    public SpellShape shape;
     public SpellElement element;
 
     public float damage;

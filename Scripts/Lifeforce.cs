@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Lifeforce : MonoBehaviour
 {
-    [SerializeField] private float health = 50;
+    public float health;
+    public float maxHealth = 50;
     List<Debuff> debuffs;
 
     public float iFrames = 0;
@@ -14,6 +15,7 @@ public class Lifeforce : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        health = maxHealth;
         debuffs = new List<Debuff>();
         StartCoroutine(DebuffClock());
     }
