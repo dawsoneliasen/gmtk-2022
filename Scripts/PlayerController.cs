@@ -41,8 +41,9 @@ public class PlayerController : MonoBehaviour
     void Jump(){
         if(Input.GetKeyDown("space") && !onRope){
             Debug.DrawLine(transform.position, transform.position + new Vector3(0, -1.5f, 0), new Color(1, 0, 0, 1), 1f);
-            if(Physics2D.RaycastAll(transform.position, new Vector3(0, -1f, 0), 1.5f).Length > 1){
-                transform.GetComponent<Rigidbody2D>().AddForce(new Vector3(0, 12), ForceMode2D.Impulse);
+            if (Physics2D.OverlapCircleAll(transform.position + new Vector3(0, -2.0f, 0), 2.0f).Length > 1) {
+            // if (Mathf.Abs(transform.GetComponent<Rigidbody2D>().velocity.y) < 0.01f) {
+                transform.GetComponent<Rigidbody2D>().AddForce(new Vector3(0, 20), ForceMode2D.Impulse);
             }
         }
     }
