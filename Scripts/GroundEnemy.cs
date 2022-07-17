@@ -56,7 +56,7 @@ public class GroundEnemy : MonoBehaviour
 
     void FindTarget(){
         target = null;
-        GameObject t = GameObject.Find("Player");
+        GameObject t = GameObject.Find("Player(Clone)");
         
         if(t == null){
             return;

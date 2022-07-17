@@ -8,6 +8,9 @@ public class DiceArea : MonoBehaviour
     public Spell spell;
 
     void OnTriggerStay2D(Collider2D other){
+        if(other.gameObject.name == "Player(Clone)"){
+            return;
+        }
         Lifeforce l = other.GetComponent<Lifeforce>();
         if(l == null){
             return;
