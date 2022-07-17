@@ -15,9 +15,13 @@ public class PlayerController : MonoBehaviour
 
     public bool onRope = false;
 
+    public Animator anim;
+
     void Start(){
         InitDiceList();
         nextDice = Random.Range(0, availableDice.Count);
+
+        anim = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -27,6 +31,13 @@ public class PlayerController : MonoBehaviour
         ClimbRope();
         ThrowDice();
         UpdateUI();
+
+        //Animation Stuff
+        transform.localScale = new Vector3(2 * Mathf.Sign((Input.mousePosition - new Vector3(Screen.width/2, Screen.height/2, 0)).x), 2f, 1f);
+        if(anim != null){
+            anim.SetFloat("ySpeed", transform.GetComponent<Rigidbody2D>().velocity.y);
+            anim.SetFloat("xSpeed", Mathf.Abs(transform.GetComponent<Rigidbody2D>().velocity.x));
+        }
     }
 
     void Move(){
@@ -84,6 +95,10 @@ public class PlayerController : MonoBehaviour
 
     void ThrowDice(){
         if(Input.GetMouseButtonDown(0) && availableDice.Count > 0){
+            if(anim != null){
+                anim.SetTrigger("Throw");
+            }
+
             int index = nextDice;
             GameObject d = GameObject.Instantiate(die);
             d.GetComponent<Die>().spell = availableDice[index];
@@ -104,7 +119,7 @@ public class PlayerController : MonoBehaviour
     }
 
     void CollectDice(GameObject d){
-        if(Physics2D.IsTouching(transform.GetComponent<Collider2D>(), d.GetComponent<Collider2D>())){
+        if(Physics2D.IsTouching(transform.GetComponent<Collider2D>(), d.GetComponent<Collider2D>()) && d.GetComponent<Die>().grabable){
             if(availableDice.Count < 5){
                 availableDice.Add(d.GetComponent<Die>().spell);
                 nextDice = Random.Range(0, availableDice.Count);

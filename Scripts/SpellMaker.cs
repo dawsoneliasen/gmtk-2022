@@ -39,13 +39,16 @@ public static class SpellMaker
         return new Spell(shape, element, Random.Range(1, 5), radius, duration, sides);
     }
 
-    public static Spell MakeSpellLevel(int lvl, int element = -1){
+    public static Spell MakeSpellLevel(int lvl, int element = -1, int shape = -1){
         //lvl should be on a scale from 1-10;
         Spell s = MakeSpellRandom();
         if(element == -1){
             s.element = (SpellElement)Random.Range(0, 5);
         } else{
             s.element = (SpellElement)element;
+        }
+        if(shape != -1){
+            s.shape = (SpellShape)shape;
         }
         s.radius = lvl * Random.Range(.5f, 1.5f);
         float sidesEstimate = Random.Range(lvl/10f * .75f, lvl/10f * 1.25f) * 6;
